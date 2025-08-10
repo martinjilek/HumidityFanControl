@@ -9,29 +9,43 @@ public class FanControlService
     private readonly RelayController _relay;
     private readonly DataLogger _logger;
     private readonly PeriodicTimer _timer;
+    private readonly double _humidityThreshold;
     private readonly CancellationToken _token;
 
-    public FanControlService(ISensorReader sensor, RelayController relay, DataLogger logger, TimeSpan interval, CancellationToken token)
+    public FanControlService(
+        ISensorReader sensor, 
+        RelayController relay, 
+        DataLogger logger, 
+        TimeSpan interval,
+        double humidityThreshold, 
+        CancellationToken token)
     {
         _sensor = sensor;
         _relay = relay;
         _logger = logger;
         _timer = new PeriodicTimer(interval);
+        _humidityThreshold = humidityThreshold;
         _token = token;
     }
 
     public async Task RunAsync()
     {
-        while (await _timer.WaitForNextTickAsync(_token))
+        try
         {
-            double temp = _sensor.ReadTemperature();
-            double hum = _sensor.ReadHumidity();
-            bool relayOn = hum > 60.0;
+            while (await _timer.WaitForNextTickAsync(_token))
+            {
+                double temp = _sensor.ReadTemperature();
+                double hum = _sensor.ReadHumidity();
+                bool relayOn = hum > _humidityThreshold;
 
-            _relay.SetRelay(relayOn);
+                _relay.SetRelay(relayOn);
 
-            Console.WriteLine($"🌡️ {temp:F2}°C | 💧 {hum:F2}% | Relay: {(relayOn ? "ON" : "OFF")}");
-            await _logger.LogAsync(temp, hum, relayOn);
+                Console.WriteLine($"🌡️ {temp:F2}°C | 💧 {hum:F2}% | Relay: {(relayOn ? "ON" : "OFF")}");
+                await _logger.LogAsync(temp, hum, relayOn);
+            }
+        }catch (OperationCanceledException)
+        {
+            Console.WriteLine("✅ Shutdown requested. Cleaning up...");
         }
     }
 }

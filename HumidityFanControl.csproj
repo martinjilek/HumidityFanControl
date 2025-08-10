@@ -8,13 +8,22 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Iot.Device.Bindings" Version="4.0.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
+        <PackageReference Include="Iot.Device.Bindings" Version="4.0.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.4" />
-      <PackageReference Include="System.Device.Gpio" Version="4.0.1" />
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.4" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+        <PackageReference Include="System.Device.Gpio" Version="4.0.1" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Config/appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        </Content>
     </ItemGroup>
 
 </Project>

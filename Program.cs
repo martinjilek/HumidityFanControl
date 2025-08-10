@@ -1,25 +1,31 @@
 ﻿using System.Device.Gpio;
 using System.Device.I2c;
+using HumidityFanControl.Config;
 using HumidityFanControl.Data;
 using HumidityFanControl.Hardware;
 using HumidityFanControl.Models;
 using HumidityFanControl.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
-const byte HTU21D_ADDR = 0x40;
+// load configs
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("Config/appsettings.json", optional: false, reloadOnChange: true)
+    .Build();
 
-const int RELAY_GPIO = 17;
-const int DELAY_MS = 2500;
+var fanSettings = configuration.GetSection("FanControl").Get<FanControlSettings>();
+var sensorSettings = configuration.GetSection("Sensor").Get<SensorSettings>();
 
 //setup db, create if doesnt exist
 using var context = new HfcContext();
 context.Database.Migrate();
 
-using var i2cDevice = I2cDevice.Create(new I2cConnectionSettings(1, HTU21D_ADDR));
+using var i2cDevice = I2cDevice.Create(new I2cConnectionSettings(sensorSettings.I2cBusId,sensorSettings.I2cAddress));
 using var gpio = new GpioController();
 
 var sensor = new Htu21dSensorReader(i2cDevice);
-var relay = new RelayController(gpio, RELAY_GPIO);
+var relay = new RelayController(gpio, fanSettings.RelayGpioPin);
 var logger = new DataLogger(context);
 
 var cts = new CancellationTokenSource();
@@ -30,5 +36,5 @@ Console.CancelKeyPress += (s, e) =>
     cts.Cancel();
 };
 
-var service = new FanControlService(sensor, relay, logger, TimeSpan.FromMilliseconds(DELAY_MS), cts.Token);
+var service = new FanControlService(sensor, relay, logger, TimeSpan.FromMilliseconds(fanSettings.ReadIntervalMs),fanSettings.HumidityThreshold,cts.Token);
 await service.RunAsync();
