@@ -2,8 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 
-namespace HumidityFanControl.Models;
-
+namespace HumidityFanControl.Data.Models;
 public class HfcContext : DbContext
 {
     public DbSet<SensorLog> Logs { get; set; }

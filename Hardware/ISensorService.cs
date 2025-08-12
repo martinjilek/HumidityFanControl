@@ -1,6 +1,6 @@
 namespace HumidityFanControl.Hardware;
 
-public interface ISensorReader
+public interface ISensorService
 {
     double ReadTemperature();
     double ReadHumidity();

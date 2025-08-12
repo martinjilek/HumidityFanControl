@@ -1,5 +1,4 @@
-namespace HumidityFanControl.Models;
-
+namespace HumidityFanControl.Data.Models;
 public class SensorLog
 {
     public int Id { get; set; }

@@ -1,4 +1,4 @@
-using HumidityFanControl.Models;
+using HumidityFanControl.Data.Models;
 
 namespace HumidityFanControl.Data;
 

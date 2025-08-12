@@ -1,51 +1,38 @@
+using HumidityFanControl.Config;
 using HumidityFanControl.Data;
 using HumidityFanControl.Hardware;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace HumidityFanControl.Services;
 
-public class FanControlService
+public class FanControlService : BackgroundService
 {
-    private readonly ISensorReader _sensor;
     private readonly RelayController _relay;
-    private readonly DataLogger _logger;
-    private readonly PeriodicTimer _timer;
-    private readonly double _humidityThreshold;
-    private readonly CancellationToken _token;
+    private bool _relayOn = false;
+    private readonly ISensorService _sensor;
+    private readonly FanControlSettings _settings;
 
-    public FanControlService(
-        ISensorReader sensor, 
-        RelayController relay, 
-        DataLogger logger, 
-        TimeSpan interval,
-        double humidityThreshold, 
-        CancellationToken token)
+    public FanControlService(RelayController relay, ISensorService sensor, IOptions<FanControlSettings> settings)
     {
-        _sensor = sensor;
         _relay = relay;
-        _logger = logger;
-        _timer = new PeriodicTimer(interval);
-        _humidityThreshold = humidityThreshold;
-        _token = token;
+        _sensor = sensor;
+        _settings = settings.Value;
     }
 
-    public async Task RunAsync()
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        try
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (await _timer.WaitForNextTickAsync(_token))
-            {
-                double temp = _sensor.ReadTemperature();
-                double hum = _sensor.ReadHumidity();
-                bool relayOn = hum > _humidityThreshold;
+            double temp = _sensor.ReadTemperature();
+            double hum = _sensor.ReadHumidity();
+            
+            _relayOn = hum > _settings.HumidityThreshold;
+            Console.WriteLine($"🌡️ {temp:F2}°C | 💧 {hum:F2}% | Relay: {(_relayOn ? "ON" : "OFF")}");
+            _relay.SetRelay(_relayOn);
 
-                _relay.SetRelay(relayOn);
-
-                Console.WriteLine($"🌡️ {temp:F2}°C | 💧 {hum:F2}% | Relay: {(relayOn ? "ON" : "OFF")}");
-                await _logger.LogAsync(temp, hum, relayOn);
-            }
-        }catch (OperationCanceledException)
-        {
-            Console.WriteLine("✅ Shutdown requested. Cleaning up...");
+            await Task.Delay(_settings.ReadIntervalMs, stoppingToken);
         }
     }
+   
 }
