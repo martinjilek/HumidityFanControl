@@ -1,5 +1,4 @@
 ﻿using HumidityFanControl.Config;
-using HumidityFanControl.Data;
 using HumidityFanControl.Hardware;
 using HumidityFanControl.Data.Models;
 using HumidityFanControl.Services;
@@ -17,6 +16,7 @@ var configuration = new ConfigurationBuilder()
 
 builder.Services.Configure<FanControlSettings>(configuration.GetSection("FanControl"));
 builder.Services.Configure<SensorSettings>(configuration.GetSection("Sensor"));
+builder.Services.Configure<WeatherDataSettings>(configuration.GetSection("WeatherDataSettings"));
 
 builder.Services.AddSingleton<IWeatherDataService, WeatherDataService>();
 builder.Services.AddSingleton<ISensorService, Htu21dSensorService>();
@@ -26,14 +26,7 @@ builder.Services.AddDbContext<HfcContext>();
 
 builder.Services.AddHostedService<FanControlService>();
 
-
-// var cts = new CancellationTokenSource();
-// Console.CancelKeyPress += (s, e) =>
-// {
-//     Console.WriteLine("\n🛑 Ctrl+C pressed. Exiting...");
-//     e.Cancel = true;
-//     cts.Cancel();
-// };
+builder.Services.AddHttpClient<WeatherDataService>();
 
 var app = builder.Build();
 
