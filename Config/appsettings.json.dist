@@ -1,0 +1,24 @@
+{
+  "FanControl": {
+    "HumidityThreshold": 60.0,
+    "RelayGpioPin": 17,
+    "ReadIntervalMs": 2500,
+    "Schedule": {
+      "Default": [
+        {"StartTime": "07:00", "EndTime": "20:00" }
+      ],
+      Monday: [
+        {"StartTime": "09:00", "EndTime": "17:00" }
+      ],
+    }
+  },
+  "Sensor": {
+    "I2cBusId": 1,
+    "I2cAddress": 64
+  },
+  "WeatherData" : {
+    "enable" : true,
+    "latitude": 29.9892,
+    "longitude": 31.1344
+  }
+}

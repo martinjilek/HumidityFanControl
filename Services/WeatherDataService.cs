@@ -25,17 +25,23 @@ public class WeatherDataService : IWeatherDataService
     {
         get
         {
-            double result = 0.0;
-            if (WeatherData?.Hourly?.Time != null)
-            {
-                string formattedTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:00");
-                int index = WeatherData.Hourly.Time.IndexOf(formattedTime);
-                if (index >= 0 && index < WeatherData.Hourly.Relative_humidity_2m.Count)
-                {
-                    result = WeatherData.Hourly.Relative_humidity_2m[index];
-                }
-            }
-            return result;
+            if (WeatherData?.Hourly?.Time == null || WeatherData.Hourly.Relative_humidity_2m == null)
+                return 0.0;
+
+            // Convert API times to DateTime
+            var times = WeatherData.Hourly.Time
+                .Select(t => DateTime.Parse(t)) // API gives ISO8601 strings
+                .ToList();
+
+            DateTime now = DateTime.Now;
+
+            // Find index of closest time to "now"
+            int closestIndex = times
+                .Select((t, i) => new { Time = t, Index = i, Diff = Math.Abs((t - now).TotalMinutes) })
+                .OrderBy(x => x.Diff)
+                .First().Index;
+
+            return WeatherData.Hourly.Relative_humidity_2m[closestIndex];
         }
     }
 
@@ -43,6 +49,7 @@ public class WeatherDataService : IWeatherDataService
     {
         _client = client;
         _settings = settings.Value;
+        if (!_settings.Enable) return;
 
         // Start the polling loop
         _timer = new Timer(async _ => await FetchWeatherData(), null, TimeSpan.Zero, TimeSpan.FromMinutes(30));
@@ -51,7 +58,7 @@ public class WeatherDataService : IWeatherDataService
     public async Task<WeatherData?> GetWeatherData(double lat, double lon)
     {
         return await _client.GetFromJsonAsync<WeatherData?>(
-            $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&hourly=relative_humidity_2m");
+            $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&hourly=relative_humidity_2m&timezone=Europe%2FPrague");
     }
 
     private async Task FetchWeatherData()
