@@ -3,6 +3,7 @@ using HumidityFanControl.Core;
 using HumidityFanControl.Core.Rules;
 using HumidityFanControl.Core.States;
 using HumidityFanControl.Data;
+using HumidityFanControl.Data.Models;
 using HumidityFanControl.Hardware;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,7 @@ public class FanControlService : BackgroundService
     private readonly ISensorService _sensor;
     private readonly FanControlSettings _settings;
     private readonly IWeatherDataService _weatherDataService;
+    private readonly ILogRepository _logRepository;
     
     private readonly FanStateMachine _stateMachine;
 
@@ -39,21 +41,32 @@ public class FanControlService : BackgroundService
                 _lastRelayOffDatetime = DateTime.Now;
             }
 
+            if (value != _relayOn)
+            {
+                _ = _logRepository.LogAsync(_temp, _hum, value, $"State changed to {(value ? "ON" : "OFF")}");
+            }
+
             _relayOn = value;
             _relay.SetRelay(_relayOn);
         }
     }
 
-    public FanControlService(RelayController relay, ISensorService sensor, IOptions<FanControlSettings> settings,
-        IWeatherDataService weatherDataService)
+    public FanControlService(
+        RelayController relay, 
+        ISensorService sensor, 
+        IOptions<FanControlSettings> settings,
+        IWeatherDataService weatherDataService, 
+        ILogRepository logRepository)
     {
         _relay = relay;
         _sensor = sensor;
         _settings = settings.Value;
         _weatherDataService = weatherDataService;
+        _logRepository = logRepository;
         
-        _stateMachine = new FanStateMachine(new IFanRule[]
+        _stateMachine = new FanStateMachine(new FanRule[]
         {
+            new RunTimeTableRule(),
             new ScheduleRule(),
             new HumidityDifferenceRule(),
             new HumidityThresholdRule()
@@ -79,12 +92,11 @@ public class FanControlService : BackgroundService
 
             var newState = _stateMachine.Next(ctx, _settings);
             RelayOn = _stateMachine.RelayOn;
-
+            
             Console.WriteLine(
                 $"🌡️ {_temp:F2}°C | 💧 {_hum:F2}% | State: {newState} | Relay: {(RelayOn ? "ON" : "OFF")} | Outside Humidity: {_outsideHumidity:F2}%");
 
             await Task.Delay(_settings.ReadIntervalMs, stoppingToken);
         }
     }
-    
 }

@@ -2,7 +2,7 @@ using HumidityFanControl.Data.Models;
 
 namespace HumidityFanControl.Data;
 
-public class DataLogger
+public class DataLogger : ILogRepository
 {
     private readonly HfcContext _context;
 
@@ -11,15 +11,24 @@ public class DataLogger
         _context = context;
     }
 
-    public async Task LogAsync(double temp, double hum, bool relayOn)
+    public async Task LogAsync(double temperature, double humidity, bool relayOn, string note = "")
     {
-        _context.Logs.Add(new()
+        try
         {
-            FanStateOn = relayOn,
-            DateCreated = DateTime.Now,
-            Humidity = hum,
-            Temperature = temp,
-        });
-        await _context.SaveChangesAsync();
+            _context.Logs.Add(new SensorLog
+            {
+                FanStateOn = relayOn,
+                DateCreated = DateTime.UtcNow,
+                Humidity = humidity,
+                Temperature = temperature,
+                Note = note
+            });
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error logging data: {e.Message}");
+        }
+        
     }
 }

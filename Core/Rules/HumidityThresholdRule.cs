@@ -2,10 +2,11 @@ using HumidityFanControl.Config;
 
 namespace HumidityFanControl.Core.Rules;
 
-public class HumidityThresholdRule : IFanRule
+public class HumidityThresholdRule : FanRule
 {
-    public string Name => "Humidity Threshold Rule";
+    protected override bool EvaluateRule(FanContext context, FanControlSettings settings) =>
+        context.InsideHumidity >= settings.HumidityThreshold;
+    public override bool Active => false;
 
-    public bool CanRun(FanContext context, FanControlSettings settings)
-        => context.InsideHumidity >= settings.HumidityThreshold;
+    public override string Name => "Humidity Threshold Rule";
 }

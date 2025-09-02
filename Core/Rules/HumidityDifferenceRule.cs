@@ -2,11 +2,12 @@ using HumidityFanControl.Config;
 
 namespace HumidityFanControl.Core.Rules;
 
-public class HumidityDifferenceRule : IFanRule
+public class HumidityDifferenceRule : FanRule
 {
-    public string Name => "Humidity Difference Rule";
+    public override string Name => "Humidity Difference Rule";
+    public override bool Active => false;
 
-    public bool CanRun(FanContext context, FanControlSettings settings)
+    protected override bool EvaluateRule(FanContext context, FanControlSettings settings)
     {
         if (context.OutsideHumidity == 0.0) return true; // no data → allow
         return context.OutsideHumidity < context.InsideHumidity;

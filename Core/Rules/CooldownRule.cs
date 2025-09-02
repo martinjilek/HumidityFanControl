@@ -2,11 +2,11 @@ using HumidityFanControl.Config;
 
 namespace HumidityFanControl.Core.Rules;
 
-public class CooldownRule : IFanRule
+public class CooldownRule : FanRule
 {
-    public string Name => "Cooldown Rule";
+    public override string Name => "Cooldown Rule";
 
-    public bool CanRun(FanContext context, FanControlSettings settings)
+    protected override bool EvaluateRule(FanContext context, FanControlSettings settings)
     {
         if (context.LastTurnedOn.HasValue)
         {

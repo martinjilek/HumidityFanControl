@@ -1,28 +1,30 @@
 using HumidityFanControl.Config;
+using Microsoft.Extensions.Logging;
 
 namespace HumidityFanControl.Core.Rules;
 
-public class ScheduleRule : FanRule
+public class RunTimeTableRule : FanRule
 {
-    
-    public override string Name => "Schedule Rule";
+    public override string Name => "Run time table Rule";
 
     protected override bool EvaluateRule(FanContext context, FanControlSettings settings)
     {
         var now = context.CurrentTime.TimeOfDay;
-        
-        var defaultInterval = new FanControlInterval { StartTime = new TimeSpan(9,0,0), EndTime = new TimeSpan(19,0,0) };
+        FanControlInterval? defaultInterval = null;
 
-        var schedule = settings.Schedule;
+        var schedule = settings.RunTimeTable;
+        // if no schedule defined, allow running at any time, otherwise run ONLY during defined intervals
         if (schedule == null || schedule.Count == 0)
-            return now >= defaultInterval.StartTime && now <= defaultInterval.EndTime;
+            return true;
 
         schedule.TryGetValue(context.CurrentTime.DayOfWeek.ToString(), out var intervals);
         if (intervals == null || intervals.Count == 0)
             schedule.TryGetValue("Default", out intervals);
 
         if (intervals == null || intervals.Count == 0)
-            return now >= defaultInterval.StartTime && now <= defaultInterval.EndTime;
+        {
+            return false;
+        }
 
         return intervals.Any(i => now >= i.StartTime && now <= i.EndTime);
     }

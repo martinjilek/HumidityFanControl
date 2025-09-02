@@ -6,9 +6,9 @@ public class FanStateMachine
 {
     private FanState _state = FanState.Off;
     private DateTime _stateEnteredAt = DateTime.MinValue;
-    private readonly IEnumerable<IFanRule> _rules;
+    private readonly IEnumerable<FanRule> _rules;
 
-    public FanStateMachine(IEnumerable<IFanRule> rules)
+    public FanStateMachine(IEnumerable<FanRule> rules)
     {
         _rules = rules;
     }

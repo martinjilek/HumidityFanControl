@@ -1,15 +1,25 @@
 {
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=HumidityFanControl;Username=postgres;Password=yourpw"
+  },
   "FanControl": {
     "HumidityThreshold": 60.0,
     "RelayGpioPin": 17,
+    "FanTimingSettings": {
+      "MinOnTimeMinutes": 15,
+      "MaxOnTimeMinutes": 120,
+      "CooldownTimeMinutes": 15
+    },
     "ReadIntervalMs": 2500,
     "Schedule": {
       "Default": [
-        {"StartTime": "07:00", "EndTime": "20:00" }
-      ],
-      Monday: [
-        {"StartTime": "09:00", "EndTime": "17:00" }
-      ],
+        {"StartTime": "07:00", "EndTime": "23:00" }
+      ]
+    },
+    "RunTimeTable": {
+       "Default" : [
+         {"StartTime": "08:00", "EndTime": "9:00" },
+       ]
     }
   },
   "Sensor": {
